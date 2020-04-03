@@ -8,6 +8,8 @@ import router from './routing';
 
 import './service/axios';
 
+import './styles/common.scss'
+
 
 Vue.config.productionTip = false;
 Vue.use(VueRouter);

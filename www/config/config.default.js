@@ -33,14 +33,13 @@ module.exports = appInfo => {
     },
     // oracle: {
     //   client: {
-    //     user: 'SYSTEM',
-    //     password: 'Ytt#20200225',
-    //     connectString: '192.168.200.69:1521/ONEDB',
+    //     user: '',
+    //     password: '',
+    //     connectString: '',
     //   },
     // }
     mongoose: {
-      url: 'mongodb://127.0.0.1:27017/test',
-      options: {}
+      url: 'mongodb://127.0.0.1:27017/test'
     },
     jwt: {
       secret: 'sweety@liuying'

@@ -29,12 +29,11 @@
             }
         },
         async mounted() {
-            let xAxisData = [];       // 存储项目名
+            let xAxisData = []; // 存储项目名
             let dailyN = await this.$http.get('dailyNew');
             let dailyNew = dailyN.data;
-            let tem = Object.values(dailyNew);       // 每日新增会员数量数组
-            console.log(tem)
-            let dailyTotalArr = [];       // 存储每月新增会员总量
+            let tem = Object.values(dailyNew); // 每日新增会员数量数组
+            let dailyTotalArr = []; // 存储每月新增会员总量
             tem.forEach(v => {
                 xAxisData.push(v.name);
                 dailyTotalArr.push(util.total(v.value));

@@ -19,16 +19,17 @@
       </el-aside>
       <el-container>
         <el-header>
-          <el-dropdown class="f-r">
-            <div class="user-info">
-              <el-avatar :size="50" src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png">
-              </el-avatar>
-              admin
-            </div>
-            <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item @click="logout">退出</el-dropdown-item>
-            </el-dropdown-menu>
-          </el-dropdown>
+          <el-menu :default-active="'1'" class="user-info" mode="horizontal" text-color="#333">
+            <el-submenu index="1">
+              <template slot="title">
+                <el-avatar :size="50" src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png">
+                </el-avatar>
+                {{user.name}}管理员
+              </template>
+              <el-menu-item index="1-1">个人中心</el-menu-item>
+              <el-menu-item index="2-2" @click="logout">退出登陆</el-menu-item>
+            </el-submenu>
+          </el-menu>
 
         </el-header>
         <el-main>
@@ -36,7 +37,7 @@
             <router-view></router-view>
           </keep-alive>
         </el-main>
-        <el-footer>@中航九方购物中心—总部—信息技术中心</el-footer>
+        <el-footer>@ 中航九方购物中心—总部—信息技术中心</el-footer>
       </el-container>
     </el-container>
   </div>
@@ -46,12 +47,22 @@
   export default {
     data() {
       return {
-        defaultActive: '1'
+        user: {},
+        defaultActive: '1',
+        logoutFlag: false
       }
     },
+    mounted() {
+      let localUser = JSON.parse(localStorage.getItem('user'));
+      this.user = localUser ? localUser : {};
+    },
     methods: {
+      showLogout() {
+        this.logoutFlag = true;
+      },
       logout() {
-        console.log(1)
+        localStorage.removeItem('user');
+        this.logoutFlag = false;
         this.$router.push('/login')
       }
     }
@@ -77,14 +88,29 @@
   }
 
   .user-info {
-    height: 60px;
-    line-height: 60px;
+    float: right;
+    position: relative;
+    background: #b2c0d1;
+
 
     .el-avatar {
       vertical-align: middle;
       margin-right: 8px;
     }
+
   }
+
+  .el-menu--horizontal .el-menu .el-menu-item {
+    text-align: center;
+    &:hover {
+      background: #ecf5ff;
+      color: #409EFF !important;
+    }
+  }
+
+  // .el-menu--horizontal>.el-submenu .el-submenu__title:hover {
+  //   background-color: #b2c0d1 !important;
+  // }
 
   .el-main {
     background-color: #E9EEF3;

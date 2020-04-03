@@ -30,25 +30,26 @@ class UserController extends BaseController {
   async login() {
     const { ctx, app } = this;
     let { nickname, pwd, captcha } = ctx.request.body;
-
     // 用户验证
     let user = await ctx.model.User.findOne({
       nickname,
-      pwd: md5(pwd)
+      pwd: pwd
     })
     if (captcha.toUpperCase() == ctx.session.captcha.toUpperCase()) {
-      console.log('user', user);
       if (user) {
-        let { nickname, name } = user;
+        let { nickname, name, sexy, mall, avatar } = user;
         const token = app.jwt.sign({
           name,
           nickname,
+          sexy,
+          mall,
+          avatar,
           _id: user._id
         }, app.config.jwt.secret, {
           expiresIn: '1h'
         })
         this.success({
-          name, nickname, token
+          name, nickname, sexy, mall, avatar, token
         })
       } else {
         this.error('用户名密码错误')

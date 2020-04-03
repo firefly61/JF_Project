@@ -3,53 +3,74 @@
         <h2>销售填报</h2>
         <table>
             <tr>
-                <td class="t-r">项目</td>
+                <td class="t-r fwb">项目</td>
                 <td>
                     <el-select v-model='mall' placeholder="请选择">
-                        <el-option v-for="item in malls" :key="item.code" :label="item.lable" :value="item.label">
+                        <el-option v-for="item in malls" :key="item.code" :label="item.label" :value="item.code"
+                            :disabled="item.code!=user.mall">
                         </el-option>
                     </el-select>
                 </td>
                 <td class="t-r">日期</td>
                 <td>
-                    <el-date-picker v-model="today" type="date" placeholder="选择日期">
+                    <el-date-picker v-model="today" type="date" placeholder="选择日期" @blur="dateBlur">
                     </el-date-picker>
-                </td>
-            </tr>
-            <tr>
-                <td class="t-r">当日总销售额(单位：万元)</td>
-                <td>
-                    <el-input v-model="todaySale"></el-input>
                 </td>
                 <td class="t-r">时间进度</td>
                 <td>{{getTProgress}}</td>
             </tr>
             <tr>
-                <td class="t-r">当日客流(单位：人次)</td>
+                <td class="t-r c-r">当日总销售额(单位：万元)</td>
                 <td>
-                    <el-input v-model="todayCustomer" placeholder="人次"></el-input>
+                    <el-input v-model="todaySale" placeholder="万元" type="number"></el-input>
                 </td>
             </tr>
             <tr>
-                <td class="t-r">本月销售目标(单位：万元)</td>
+                <td class="t-r">当日客流(单位：人次)</td>
                 <td>
-                    <el-input v-model="monthTarget"></el-input>
+                    <el-input v-model="todayCustomer" placeholder="人次" type="number"></el-input>
                 </td>
-                <td class="t-r">
-                    本月销售额(单位：万元)
+                <td class="t-r" v-if="user.mall==9002">文轩客流(单位：人次)</td>
+                <td v-if="user.mall==9002">
+                    <el-input v-model="todayWXCustomer" placeholder="人次" type="number"></el-input>
+                </td>
+            </tr>
+            <tr>
+                <td class="t-r c-r">本月销售目标<i v-if="user.mall==9001">含天虹</i>(单位：万元)</td>
+                <td>
+                    <el-input v-model="monthTarget" placeholder="万元" type="number"></el-input>
+                </td>
+                <td class="t-r c-r">
+                    本月销售额<i v-if="user.mall==9001">含天虹</i>(单位：万元)
                 </td>
                 <td>
-                    <el-input placeholder="万元" v-model="monthSale"></el-input>
+                    <el-input placeholder="万元" type="number" v-model="monthSale"></el-input>
                 </td>
             </tr>
             <tr>
                 <td class="t-r">本月完成</td>
                 <td v-if="monthSale && monthTarget">{{((monthSale/monthTarget) * 100).toFixed(2)}}%</td>
             </tr>
+            <tr v-if="user.mall==9001">
+                <td class="t-r c-r">本月销售目标不含天虹(单位：万元)</td>
+                <td>
+                    <el-input v-model="monthTargetNoTH" placeholder="万元" type="number"></el-input>
+                </td>
+                <td class="t-r c-r">
+                    本月销售额不含天虹(单位：万元)
+                </td>
+                <td>
+                    <el-input placeholder="万元" type="number" v-model="monthSaleNoTH"></el-input>
+                </td>
+            </tr>
+            <tr v-if="user.mall==9001">
+                <td class="t-r">本月完成</td>
+                <td v-if="monthSale && monthTarget">{{((monthSale/monthTarget) * 100).toFixed(2)}}%</td>
+            </tr>
             <tr>
                 <td class="t-r">去年同期 <span>{{getWeek}}</span>(单位：万元)</td>
                 <td>
-                    <el-input v-model="lastYearWeek" placeholder="万元"></el-input>
+                    <el-input v-model="lastYearWeek" type="number" placeholder="万元"></el-input>
                 </td>
                 <td class="t-r">同比</td>
                 <td v-if="todaySale & lastYearWeek">{{((todaySale/lastYearWeek - 1) * 100).toFixed(2)}}%</td>
@@ -63,9 +84,9 @@
                 <td v-if="todaySale & lastYearDay">{{((todaySale/lastYearDay -1)*100).toFixed(2)}}%</td>
             </tr>
             <tr>
-                <td class="t-r">环比上{{getWeek}} <span>{{getLastWeekDate}}</span></td>
+                <td class="t-r">环比上周 {{getWeek}} <span>{{getLastWeekDate}}</span></td>
                 <td>
-                    <el-input v-model="lastWeek" placeholder="万元"></el-input>
+                    <el-input v-model="lastWeek" type="number" placeholder="万元"></el-input>
                 </td>
                 <td class="t-r">环比</td>
                 <td v-if="todaySale & lastWeek">{{((todaySale/lastWeek -1)*100).toFixed(2)}}%</td>
@@ -82,6 +103,12 @@
                 </el-row>
             </el-col>
         </el-row>
+        <el-row>
+            <el-col :span="18" class="add-floor" @click.native="addFloor">
+                <i class="el-icon-thumb"></i>
+                <span>添加楼层</span>
+            </el-col>
+        </el-row>
         <h3>业态明细(单位：万元)</h3>
         <table>
             <thead>
@@ -89,14 +116,26 @@
                 <th colspan="2">本周{{getWeek}} ({{getToday}})</th>
             </thead>
             <tbody>
+                <tr v-if="user.mall==9002">
+                    <td>文轩书店</td>
+                    <td>
+                        <el-input placeholder="万元" type="number" v-model="wxSale.lastVal"></el-input>
+                    </td>
+                    <td>文轩书店</td>
+                    <td>
+                        <el-input placeholder="万元" type="number" v-model="wxSale.val"></el-input>
+                    </td>
+                    <td>环比</td>
+                    <td v-if="wxSale.lastVal&&wxSale.val">{{((wxSale.val/wxSale.lastVal-1)*100).toFixed(2)}}%</td>
+                </tr>
                 <tr v-for='item in format' :key="item.label">
                     <td>{{item.label}}</td>
                     <td>
-                        <el-input placeholder="万元" v-model="item.lastVal"></el-input>
+                        <el-input placeholder="万元" type="number" v-model="item.lastVal"></el-input>
                     </td>
-                    <td>零售</td>
+                    <td>{{item.label}}</td>
                     <td>
-                        <el-input placeholder="万元" v-model="item.val"></el-input>
+                        <el-input placeholder="万元" type="number" v-model="item.val"></el-input>
                     </td>
                     <td>环比</td>
                     <td v-if="item.lastVal&&item.val">{{((item.val/item.lastVal-1)*100).toFixed(2)}}%</td>
@@ -106,54 +145,30 @@
         <h3>重点商户销售明细(单位：万元)</h3>
         <table>
             <thead>
-                <th></th>
+                <th>店铺属性</th>
                 <th>店铺名</th>
                 <th>销售额(万元)</th>
             </thead>
-            <tr>
-                <td>主力店</td>
+            <tr v-for="item in impStore" :key="item.id">
                 <td>
-                    <el-input placeholder="主力店铺" v-model="mainStore.storeName"></el-input>
+                    <el-select v-model="item.storeType" placeholder="请选择">
+                        <el-option v-for="item in storeTypes" :key="item.value" :label="item.label" :value="item.label">
+                        </el-option>
+                    </el-select>
                 </td>
                 <td>
-                    <el-input placeholder="万元" v-model="mainStore.saleVal"></el-input>
-                </td>
-            </tr>
-            <tr>
-                <td>次主力店</td>
-                <td>
-                    <el-input placeholder="次主力店铺" v-model="subMainStore.storeName"></el-input>
+                    <el-input :placeholder="item.storeType" v-model="item.storeName"></el-input>
                 </td>
                 <td>
-                    <el-input placeholder="万元" v-model="subMainStore.saleVal"></el-input>
-                </td>
-            </tr>
-            <tr>
-                <td>新开业品牌</td>
-                <td>
-                    <el-input placeholder="店铺" v-model="newStore.storeName"></el-input>
-                </td>
-                <td>
-                    <el-input placeholder="万元" v-model="newStore.saleVal"></el-input>
-                </td>
-            </tr>
-            <tr v-for="item in otherImpShop" :key="item.id">
-                <td></td>
-                <td>
-                    <el-input placeholder="店铺" v-model="item.storeName"></el-input>
-                </td>
-                <td>
-                    <el-input placeholder="万元" v-model="item.saleVal"></el-input>
+                    <el-input placeholder="万元" type="number" v-model="item.saleVal"></el-input>
                 </td>
             </tr>
             <tr @click="addShop">
-                <td></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="add-shop">
                         <i class="el-icon-plus"></i>
                         <span>添加店铺销售</span>
                     </div>
-
                 </td>
             </tr>
         </table>
@@ -167,35 +182,39 @@
     export default {
         data() {
             return {
+                user: {}, // 存储用户信息
                 todaySale: '', // 当日销售额
                 // tProgress: this.getTProgress(), // 时间进度
                 mall: '', // 选中项目
-                todayCustomer: '',
+                todayCustomer: '', // 今日客流
+                todayWXCustomer: '', // 成都文轩客流
                 monthTarget: '', // 本月销售目标
                 monthSale: '', // 本月销售额
+                monthTargetNoTH: '', // 赣州本月销售目标不含天虹
+                monthSaleNoTH: '', // 赣州本月销售额不含天虹
                 lastYearWeek: '', // 去年同期销售额
                 lastYearDay: '', // 去年同日销售额
                 lastWeek: '', // 一周前同日销售额
                 malls: [{ // 项目数组
-                    code: 9002,
+                    code: '9002',
                     label: '成都九方'
                 }, {
-                    code: 9006,
+                    code: '9006',
                     label: '昆山九方'
                 }, {
-                    code: 9001,
+                    code: '9001',
                     label: '赣州九方'
                 }, {
-                    code: 9010,
+                    code: '9010',
                     label: '九方巨亿'
                 }, {
-                    code: 9009,
+                    code: '9009',
                     label: '浏阳九方北正西'
                 }, {
-                    code: 9005,
+                    code: '9005',
                     label: '九江九方'
                 }, {
-                    code: 9011,
+                    code: '9011',
                     label: '侨城坊九方荟'
                 }],
                 today: new Date(),
@@ -212,20 +231,16 @@
                 }, {
                     name: 'F3',
                     value: ''
-                }, {
-                    name: 'F4',
-                    value: ''
-                }, {
-                    name: 'F5',
-                    value: ''
-                }, {
-                    name: 'F6',
-                    value: ''
                 }],
+                wxSale: {
+                    label: '文轩书店',
+                    lastVal: '',
+                    val: ''
+                },
                 format: [{
                     label: '零售',
                     lastVal: '',
-                    val: ''
+                    val: '',
                 }, {
                     label: '餐饮',
                     lastVal: '',
@@ -239,19 +254,39 @@
                     lastVal: '',
                     val: ''
                 }],
-                otherImpShop: [],
-                mainStore: {
+                storeTypes: [{
+                    label: '主力店',
+                    value: 1
+                }, {
+                    label: '次主力店',
+                    value: 2
+                }, {
+                    label: '新开业',
+                    value: 3
+                }, {
+                    label: '其他',
+                    value: 4
+                }],
+                impStore: [{
+                    id: 0,
+                    storeType: '主力店',
                     storeName: '',
                     saleVal: ''
-                },
-                subMainStore: {
-                    storeName: '',
-                    saleVal: ''
-                },
-                newStore: {
-                    storeName: '',
-                    saleVal: ''
-                }
+                }],
+            }
+        },
+        mounted() {
+            let _user = JSON.parse(localStorage.getItem('user'));
+            if (_user) {
+                this.user = _user;
+                this.malls.forEach(element => {
+                    if (element.code == _user.mall) {
+                        this.mall = element.label;
+                        return;
+                    }
+                });
+            } else {
+                this.$router.push('login');
             }
         },
         computed: {
@@ -293,36 +328,126 @@
         },
         methods: {
             async commit() {
-                let obj = {
-                    mall: this.mall,
-                    today: this.today, // 提报日期
-                    todaySale: this.todaySale, // 当日销售总额
-                    monthProgress: this.monthProgress,
-                    todayCustomer: this.todayCustomer,
-                    monthTarget: this.monthTarget,
-                    monthSale: this.monthSale,
-                    lastYearWeek: this.lastYearWeek,
-                    lastYearDay: this.lastYearWeek,
-                    lastWeek: this.lastWeek,
-                    floors: this.floors, // 楼层
-                    format: this.format, // 业态
-                    mainStore: this.mainStore,
-                    subMainStore: this.subMainStore,
-                    newStore: this.newStore,
-                    otherImpStore: this.otherImpShop
-                };
-                console.log(obj)
+                if (this.todaySale) {
+                    let obj = {
+                        mall: this.user.mall,
+                        today: Date.parse(this.today), // 提报日期,时间戳
+                        todaySale: this.todaySale, // 当日销售总额
+                        monthProgress: this.monthProgress,
+                        todayCustomer: this.todayCustomer,
+                        monthTarget: this.monthTarget, // 本月销售目标
+                        monthSale: this.monthSale, // 本月销售额
+                        monthTargetNoTH: this.monthTargetNoTH, // 赣州本月销售目标不含天虹
+                        monthSaleNoTH: this.monthSaleNoTH, // 赣州本月销售额不含天虹
+                        lastYearWeek: this.lastYearWeek,
+                        lastYearDay: this.lastYearWeek,
+                        lastWeek: this.lastWeek,
+                        floors: this.floors, // 楼层
+                        format: this.format, // 业态
+                        impStore: this.impStore
+                    };
+                    if (this.mall == 9002 && this.wxSale.val) {
+                        obj.wxSale = this.wxSale;
+                    }
+                    this.$http.post('sale/create', obj).then(() => {
+                        this.$message.success("数据提交成功");
+                    }, (err) => {
+                        this.$message.error(err);
+                    })
+                }else {
+                    this.$message.error ('请填写当日销售总额');
+                }
+
             },
-            addShop() {
-                this.otherImpShop.push({
-                    id: this.otherImpShop.length,
+            async addShop() {
+                await this.impStore.push({
+                    id: this.impStore.length,
+                    storeType: '',
                     storeName: '',
                     saleVal: ''
                 })
-                console.log(this.otherImpShop)
+                console.log(this.impStore)
+            },
+            async addFloor() {
+                let _i = this.floors.length;
+                let _name = 'F' + _i;
+                await this.floors.push({
+                    name: _name,
+                    value: ''
+                })
+            },
+            async dateBlur() {
+                let obj = {
+                    date: this.today.getTime(),
+                    mall: this.mall
+                }
+                await this.$http.post('/sale/getSale', obj).then((data) => {
+                    if (data.data) {
+                        let res = data.data;
+                        this.todaySale = res.todaySale;
+                        this.todayCustomer = res.todayCustomer;
+                        this.monthTarget = res.monthTarget; // 本月销售目标
+                        this.monthSale = res.monthSale; // 本月销售额
+                        this.monthTargetNoTH = this.user.mall == 9001 ? res.monthTargetNoTH :
+                            ''; // 赣州本月销售目标不含天虹
+                        this.monthSaleNoTH = this.user.mall == 9001 ? res.monthSaleNoTH : ''; // 赣州本月销售额不含天虹
+                        this.lastYearWeek = res.lastYearWeek;
+                        this.lastYearDay = res.lastYearDay;
+                        this.lastWeek = res.lastWeek;
+                        this.floors = res.floors; // 楼层
+                        this.format = res.format; // 业态
+                        this.impStore = res.impStore;
+                    } else {
+                        this.todaySale = '';
+                        this.todayCustomer = '';
+                        this.monthTarget = ''; // 本月销售目标
+                        this.monthSale = ''; // 本月销售额
+                        this.monthTargetNoTH = ''; // 赣州本月销售目标不含天虹
+                        this.monthSaleNoTH = ''; // 赣州本月销售额不含天虹
+                        this.lastYearWeek = '';
+                        this.lastYearDay = '';
+                        this.lastWeek = '';
+                        this.floors = [{
+                            name: 'B1',
+                            value: ''
+                        }, {
+                            name: 'F1',
+                            value: ''
+                        }, {
+                            name: 'F2',
+                            value: ''
+                        }, {
+                            name: 'F3',
+                            value: ''
+                        }]; // 楼层
+                        this.format = [{
+                            label: '零售',
+                            lastVal: '',
+                            val: '',
+                        }, {
+                            label: '餐饮',
+                            lastVal: '',
+                            val: ''
+                        }, {
+                            label: '亲子',
+                            lastVal: '',
+                            val: ''
+                        }, {
+                            label: '配套',
+                            lastVal: '',
+                            val: ''
+                        }]; // 业态
+                        this.impStore = [{
+                            id: 0,
+                            storeType: '主力店',
+                            storeName: '',
+                            saleVal: ''
+                        }];
+                    }
+
+                })
             }
-        },
-        mounted() {}
+        }
     }
 </script>
 
@@ -337,7 +462,7 @@
     h3 {
         font-size: 16px;
         text-align: left;
-        padding: 10px;
+        padding: 25px;
     }
 
     th {
@@ -348,7 +473,6 @@
 
     tr {
         :nth-child(2n) {
-            padding-right: 15px;
             text-align: left;
         }
     }
@@ -360,6 +484,31 @@
 
     .el-col {
         margin-bottom: 5px;
+    }
+
+    .add-floor {
+        cursor: pointer;
+        font-size: 14px;
+        width: 125px;
+        box-shadow: 0 0 3px 0 rgba(0, 0, 0, 0.3);
+        ;
+        padding: 8px 21px;
+        margin-left: 38px;
+        border-radius: 5px;
+
+        i {
+            margin-right: 5px;
+            border-radius: 50px;
+            padding: 2px;
+            font-size: 16px;
+            box-shadow: 0 0 5px 0 rgba(0, 0, 0, .08);
+        }
+
+        &:hover {
+            color: #409EFF;
+            border-color: #c6e2ff;
+            background-color: #ecf5ff;
+        }
     }
 
     .add-shop {

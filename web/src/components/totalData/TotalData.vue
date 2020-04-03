@@ -13,7 +13,6 @@
 
 <script>
     import Title from '../util/Title';
-    // import totalMember from '../../data/totalMember.json';
     import TotalDataCom from './TotalDataCom';
     export default {
         name: 'TotalData',

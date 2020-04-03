@@ -1,6 +1,6 @@
 import VueRouter from 'vue-router';
+import ChartsPage from './page/Charts';
 import HomePage from './page/Home';
-import SearchPage from './page/Search';
 
 const router = new VueRouter({
     mode:'history',
@@ -11,8 +11,8 @@ const router = new VueRouter({
         path: '/home',
         component: HomePage
     }, {
-        path: '/search',
-        component: SearchPage
+        path: '/charts',
+        component: ChartsPage
     }]
 })
 

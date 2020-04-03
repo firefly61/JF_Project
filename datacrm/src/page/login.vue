@@ -6,25 +6,26 @@
                 <el-input v-model="loginForm.nickname"></el-input>
             </el-form-item>
             <el-form-item label="密码" prop="pwd">
-                <el-input v-model="loginForm.pwd"></el-input>
+                <el-input v-model="loginForm.pwd" type="password"></el-input>
             </el-form-item>
             <el-form-item label="验证码" prop="captcha">
                 <el-input v-model="loginForm.captcha" class="captcha-input"></el-input>
                 <img :src="code.captcha" class="f-r" @click="getNew" alt="验证码">
             </el-form-item>
-            <el-button type="primary" @click="login">登陆</el-button>
+            <el-button type="primary" @click.native="login">登陆</el-button>
         </el-form>
     </div>
 </template>
 
 <script>
+    import md5 from "md5";
     export default {
         data() {
             return {
                 loginForm: {
-                    nickname: 'tt3',
-                    pwd: 'test3',
-                    captcha: '1234'
+                    nickname: 'jjjf',
+                    pwd: '111111',
+                    captcha: ''
                 },
                 rules: {
                     nickname: [{
@@ -48,16 +49,31 @@
                 }
             }
         },
+        mounted() {
+            this.code.captcha = '/api/captcha?_t' + new Date().getTime();
+        },
         methods: {
             login() {
                 this.$refs['loginForm'].validate((valid) => {
                     if (valid) {
-                        this.$http.post('login', this.loginForm).then(
+                        let obj = {
+                            nickname: this.loginForm.nickname,
+                            pwd: md5(this.loginForm.pwd),
+                            captcha: this.loginForm.captcha
+                        }
+                        this.$http.post('user/login', obj).then(
                             (data) => {
                                 if (data.code == -1) {
-                                    alert(data.message);
+                                    this.$message.error(data.message);
+                                    this.getNew();
                                 } else {
-                                    this.$router.push('/index')
+                                    console.log(data.data)
+                                    localStorage.setItem('user', JSON.stringify(data.data));
+                                    this.$message.success('登陆成功');
+                                    setTimeout(() => {
+                                        this.$router.push('/index')
+                                    }, 1000);
+
                                 }
                                 console.log(data)
                             }, (err) => {

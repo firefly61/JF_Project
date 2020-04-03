@@ -2,4 +2,7 @@
     .lh-#{$i} {
         line-height: 2px * $i;
     }
+    .fs-#{i} {
+        font-size: 2px * $i;
+    }
 }
