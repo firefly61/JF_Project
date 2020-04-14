@@ -5,7 +5,7 @@
             <tr>
                 <td class="t-r fwb">项目</td>
                 <td>
-                    <el-select v-model='mall' placeholder="请选择">
+                    <el-select v-model='mall.label' placeholder="请选择">
                         <el-option v-for="item in malls" :key="item.code" :label="item.label" :value="item.code"
                             :disabled="item.code!=user.mall">
                         </el-option>
@@ -152,7 +152,7 @@
             <tr v-for="item in impStore" :key="item.id">
                 <td>
                     <el-select v-model="item.storeType" placeholder="请选择">
-                        <el-option v-for="item in storeTypes" :key="item.value" :label="item.label" :value="item.label">
+                        <el-option v-for="item in storeTypes" :key="item.value" :label="item.label" :value="item.value">
                         </el-option>
                     </el-select>
                 </td>
@@ -185,7 +185,6 @@
                 user: {}, // 存储用户信息
                 todaySale: '', // 当日销售额
                 // tProgress: this.getTProgress(), // 时间进度
-                mall: '', // 选中项目
                 todayCustomer: '', // 今日客流
                 todayWXCustomer: '', // 成都文轩客流
                 monthTarget: '', // 本月销售目标
@@ -195,6 +194,7 @@
                 lastYearWeek: '', // 去年同期销售额
                 lastYearDay: '', // 去年同日销售额
                 lastWeek: '', // 一周前同日销售额
+                mall: {}, // 选中项目
                 malls: [{ // 项目数组
                     code: '9002',
                     label: '成都九方'
@@ -221,15 +221,6 @@
                 weeks: ['天', '一', '二', '三', '四', '五', '六'],
                 floors: [{
                     name: 'B1',
-                    value: ''
-                }, {
-                    name: 'F1',
-                    value: ''
-                }, {
-                    name: 'F2',
-                    value: ''
-                }, {
-                    name: 'F3',
                     value: ''
                 }],
                 wxSale: {
@@ -267,26 +258,57 @@
                     label: '其他',
                     value: 4
                 }],
-                impStore: [{
-                    id: 0,
-                    storeType: '主力店',
-                    storeName: '',
-                    saleVal: ''
-                }],
+                impStore: [],
             }
         },
         mounted() {
             let _user = JSON.parse(localStorage.getItem('user'));
+            let mallInfo = JSON.parse(localStorage.getItem('mallInfo'));
             if (_user) {
                 this.user = _user;
                 this.malls.forEach(element => {
                     if (element.code == _user.mall) {
-                        this.mall = element.label;
+                        this.mall = element;
                         return;
                     }
                 });
             } else {
                 this.$router.push('login');
+                this.$message.error('请登录');
+            }
+            if (mallInfo) {
+                // 处理店铺
+                mallInfo.impStore.forEach((v, index) => {
+                    this.impStore.push({
+                        id: index,
+                        storeType: v.storeType,
+                        storeName: v.storeName,
+                        saleVal: ''
+                    })
+                })
+                // 处理楼层
+                for(let i = 1; i<mallInfo.floorNum; ++i) {
+                    this.floors.push({
+                        name: 'L' + i
+                    })
+                }
+            } else {
+                this.$http.post('mall/info', {
+                    'mall': _user.mall
+                }).then((res) => {
+                    if (res.data) {
+                        localStorage.setItem('mallInfo', JSON.stringify(res.data));
+                        res.data.impStore.forEach((v, index) => {
+                            this.impStore.push({
+                                id: index,
+                                storeType: v.storeType,
+                                storeName: v.storeName,
+                                saleVal: ''
+                            })
+                        })
+                    }
+                    console.log(res)
+                })
             }
         },
         computed: {
@@ -322,7 +344,7 @@
                 let arr = [1, 2, 3, 5, 7, 8, 10, 12];
                 let week = this.today.getMonth() + 1,
                     day = this.today.getDate();
-                let days = week in arr ? 31 : 30;
+                let days = arr.indexOf(week) > 0 ? 31 : 30;
                 return (day / days * 100).toFixed(2) + '%';
             }
         },
@@ -330,7 +352,7 @@
             async commit() {
                 if (this.todaySale) {
                     let obj = {
-                        mall: this.user.mall,
+                        mall: this.mall.code,
                         today: Date.parse(this.today), // 提报日期,时间戳
                         todaySale: this.todaySale, // 当日销售总额
                         monthProgress: this.monthProgress,
@@ -346,16 +368,17 @@
                         format: this.format, // 业态
                         impStore: this.impStore
                     };
-                    if (this.mall == 9002 && this.wxSale.val) {
+                    if (this.mall.code == 9002 && this.wxSale.val) {
                         obj.wxSale = this.wxSale;
                     }
                     this.$http.post('sale/create', obj).then(() => {
                         this.$message.success("数据提交成功");
+                        this.$router.push('reportList');
                     }, (err) => {
                         this.$message.error(err);
                     })
-                }else {
-                    this.$message.error ('请填写当日销售总额');
+                } else {
+                    this.$message.error('请填写当日销售总额');
                 }
 
             },
@@ -379,7 +402,7 @@
             async dateBlur() {
                 let obj = {
                     date: this.today.getTime(),
-                    mall: this.mall
+                    mall: this.mall.code
                 }
                 await this.$http.post('/sale/getSale', obj).then((data) => {
                     if (data.data) {
@@ -397,53 +420,54 @@
                         this.floors = res.floors; // 楼层
                         this.format = res.format; // 业态
                         this.impStore = res.impStore;
-                    } else {
-                        this.todaySale = '';
-                        this.todayCustomer = '';
-                        this.monthTarget = ''; // 本月销售目标
-                        this.monthSale = ''; // 本月销售额
-                        this.monthTargetNoTH = ''; // 赣州本月销售目标不含天虹
-                        this.monthSaleNoTH = ''; // 赣州本月销售额不含天虹
-                        this.lastYearWeek = '';
-                        this.lastYearDay = '';
-                        this.lastWeek = '';
-                        this.floors = [{
-                            name: 'B1',
-                            value: ''
-                        }, {
-                            name: 'F1',
-                            value: ''
-                        }, {
-                            name: 'F2',
-                            value: ''
-                        }, {
-                            name: 'F3',
-                            value: ''
-                        }]; // 楼层
-                        this.format = [{
-                            label: '零售',
-                            lastVal: '',
-                            val: '',
-                        }, {
-                            label: '餐饮',
-                            lastVal: '',
-                            val: ''
-                        }, {
-                            label: '亲子',
-                            lastVal: '',
-                            val: ''
-                        }, {
-                            label: '配套',
-                            lastVal: '',
-                            val: ''
-                        }]; // 业态
-                        this.impStore = [{
-                            id: 0,
-                            storeType: '主力店',
-                            storeName: '',
-                            saleVal: ''
-                        }];
                     }
+                    // else {
+                    //     this.todaySale = '';
+                    //     this.todayCustomer = '';
+                    //     this.monthTarget = ''; // 本月销售目标
+                    //     this.monthSale = ''; // 本月销售额
+                    //     this.monthTargetNoTH = ''; // 赣州本月销售目标不含天虹
+                    //     this.monthSaleNoTH = ''; // 赣州本月销售额不含天虹
+                    //     this.lastYearWeek = '';
+                    //     this.lastYearDay = '';
+                    //     this.lastWeek = '';
+                    //     this.floors = [{
+                    //         name: 'B1',
+                    //         value: ''
+                    //     }, {
+                    //         name: 'F1',
+                    //         value: ''
+                    //     }, {
+                    //         name: 'F2',
+                    //         value: ''
+                    //     }, {
+                    //         name: 'F3',
+                    //         value: ''
+                    //     }]; // 楼层
+                    //     this.format = [{
+                    //         label: '零售',
+                    //         lastVal: '',
+                    //         val: '',
+                    //     }, {
+                    //         label: '餐饮',
+                    //         lastVal: '',
+                    //         val: ''
+                    //     }, {
+                    //         label: '亲子',
+                    //         lastVal: '',
+                    //         val: ''
+                    //     }, {
+                    //         label: '配套',
+                    //         lastVal: '',
+                    //         val: ''
+                    //     }]; // 业态
+                    //     this.impStore = [{
+                    //         id: 0,
+                    //         storeType: '主力店',
+                    //         storeName: '',
+                    //         saleVal: ''
+                    //     }];
+                    // }
 
                 })
             }

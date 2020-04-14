@@ -3,13 +3,14 @@
     <el-container>
       <el-aside width="200px">
         <el-menu :default-active="defaultActive" style="min-height: 100%;" router>
-          <el-menu-item index="addReport" style="min-height:60px;">
+          <el-menu-item index="home" style="min-height:60px;">
             <img class="logo" src="../assets/_logo.png" alt="logo_首页">
           </el-menu-item>
           <el-submenu index="1">
             <template slot="title"><i class="el-icon-document"></i>数据管理</template>
             <el-menu-item index="addReport"><i class="el-icon-document-add"></i>添加数据</el-menu-item>
             <el-menu-item index="reportList"><i class="el-icon-data-analysis"></i>数据列表</el-menu-item>
+            <el-menu-item index="impStore"><i class="el-icon-data-analysis"></i>重点商户</el-menu-item>
           </el-submenu>
           <el-submenu index="2">
             <template slot="title"><i class="el-icon-document"></i>个人中心</template>
@@ -37,7 +38,7 @@
             <router-view></router-view>
           </keep-alive>
         </el-main>
-        <el-footer>@ 中航九方购物中心—总部—信息技术中心</el-footer>
+        <el-footer>@ 九方购物中心-总部-信息技术中心</el-footer>
       </el-container>
     </el-container>
   </div>
@@ -62,6 +63,7 @@
       },
       logout() {
         localStorage.removeItem('user');
+        localStorage.removeItem('mallInfo');
         this.logoutFlag = false;
         this.$router.push('/login')
       }

@@ -29,24 +29,38 @@ class SaleController extends BaseController {
 
     // 检查当日数据是否已录入
     async checkDate(dateStr, mall) {
-        const dataSet = await this.ctx.model.Sale.findOne({ today: dateStr })
+        const dataSet = await this.ctx.model.Sale.findOne({ today: dateStr, mall:mall })
         return dataSet;
     }
 
-    // 读取数据
-    async getSale() {
-        const {ctx} = this
-        console.log('请求参数', ctx.request.body)
-        const {date, mall} = ctx.request.body
-        let dataSet = await this.ctx.model.Sale.findOne({today: date, mall: mall})
-        console.log('读取', dataSet)
-        if(dataSet) {
+    // 获取门店某日数据
+    async getDaySale() {
+        const { ctx } = this
+        const { date, mall } = ctx.request.body
+        let dataSet = await this.ctx.model.Sale.findOne({ today: date, mall: mall })
+        if (dataSet) {
             this.success(dataSet)
         } else {
-            this.error('opooosss!请管理员在后台录入'+ date +'的数据')
+            this.error('opooosss!请管理员在后台录入' + this.formatDate(new Date(date)) + '的数据')
+        }
+    }
+
+    formatDate(date) {
+        return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
+    }
+
+    // 获取门店销售数据列表
+    async getMallSaleList() {
+        const {ctx} = this
+        const {mall} = ctx.request.body
+        let dataSet = await this.ctx.model.Sale.find({mall: mall})
+        if(dataSet) {
+            this.success(dataSet)
+        }else {
+            this.error('error')
         }
     }
 
 }
 
-module.exports = SaleController 
+module.exports = SaleController

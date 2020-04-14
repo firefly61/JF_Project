@@ -15,7 +15,7 @@ class UserController extends BaseController {
     });
   }
 
-  // 获取验证嘛
+  // 获取验证码
   async captcha() {
     const { ctx } = this;
     const captcha = this.service.tools.captcha()
@@ -35,28 +35,28 @@ class UserController extends BaseController {
       nickname,
       pwd: pwd
     })
-    if (captcha.toUpperCase() == ctx.session.captcha.toUpperCase()) {
-      if (user) {
-        let { nickname, name, sexy, mall, avatar } = user;
-        const token = app.jwt.sign({
-          name,
-          nickname,
-          sexy,
-          mall,
-          avatar,
-          _id: user._id
-        }, app.config.jwt.secret, {
-          expiresIn: '1h'
-        })
-        this.success({
-          name, nickname, sexy, mall, avatar, token
-        })
-      } else {
-        this.error('用户名密码错误')
-      }
+    // if (captcha.toUpperCase() == ctx.session.captcha.toUpperCase()) {
+    if (user) {
+      let { nickname, name, sexy, mall, avatar } = user;
+      const token = app.jwt.sign({
+        name,
+        nickname,
+        sexy,
+        mall,
+        avatar,
+        _id: user._id
+      }, app.config.jwt.secret, {
+        expiresIn: '1h'
+      })
+      this.success({
+        name, nickname, sexy, mall, avatar, token
+      })
     } else {
-      this.error('验证码错误')
+      this.error('用户名密码错误')
     }
+    // } else {
+    //   this.error('验证码错误')
+    // }
   }
 
   // 创建用户

@@ -1,7 +1,8 @@
 <template>
     <div class="home-page">
         <van-cell title="选择日期" :value="date" @click="showCalendar = true" />
-        <van-calendar v-model="showCalendar" :min-date="minDate" :max-date="maxDate" :default-date="defaultDate" @confirm="onConfirm" />
+        <van-calendar v-model="showCalendar" :min-date="minDate" :max-date="maxDate" :default-date="defaultDate"
+            @confirm="onConfirm" />
         <van-cell title="选择项目" :value="mall.name" @click="showMall = true" />
         <van-action-sheet v-model="showMall" :actions="actions" @select="onSelect" />
 
@@ -137,7 +138,7 @@
 </template>
 
 <script>
-import FloorsCharts from '../components/floorsCharts';
+    import FloorsCharts from '../components/floorsCharts';
     export default {
         data() {
             return {
@@ -195,7 +196,9 @@ import FloorsCharts from '../components/floorsCharts';
             }
         },
         async mounted() {
-            this.date = this.formatDate(new Date());
+            this.defaultDate = new Date(new Date().getTime() - 24 * 60 * 60 * 1000);
+            this.date = this.formatDate(this.defaultDate);
+            this.getData();
         },
         computed: {
             getToday() {
@@ -230,7 +233,7 @@ import FloorsCharts from '../components/floorsCharts';
                 let arr = [1, 2, 3, 5, 7, 8, 10, 12];
                 let week = this.today.getMonth() + 1,
                     day = this.today.getDate();
-                let days = week in arr ? 31 : 30;
+                let days = arr.indexOf(week)>0 ? 31 : 30;
                 return (day / days * 100).toFixed(2) + '%';
             }
         },
@@ -280,6 +283,7 @@ import FloorsCharts from '../components/floorsCharts';
                             this.impStore = res.impStore;
                             this.wxSale = res.wxSale;
                         } else {
+                            this.resFlag = false;
                             this.todaySale = '';
                             this.todayCustomer = '';
                             this.monthTarget = '';
@@ -292,6 +296,10 @@ import FloorsCharts from '../components/floorsCharts';
                             this.floors = [];
                             this.format = [];
                             this.impStore = [];
+                            this.$notify({
+                                type: 'danger',
+                                message: data.message
+                            });
                         }
                     }, (err) => {
                         this.$notify({

@@ -4,8 +4,8 @@ module.exports = app => {
 
     const SaleSchema = new Schema({
         __v:{type:Number, select:false},
-        mall: { type: String, require: true },
-        today: { type: String, require: true },
+        mall: { type: Number, require: true },
+        today: { type: Number, require: true },
         todaySale: { type: String, require: true },
         monthProgress: { type: String, require: true },
         todayCustomer: { type: String, require: true },

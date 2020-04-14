@@ -8,10 +8,10 @@
             <el-form-item label="密码" prop="pwd">
                 <el-input v-model="loginForm.pwd" type="password"></el-input>
             </el-form-item>
-            <el-form-item label="验证码" prop="captcha">
+            <!-- <el-form-item label="验证码" prop="captcha">
                 <el-input v-model="loginForm.captcha" class="captcha-input"></el-input>
                 <img :src="code.captcha" class="f-r" @click="getNew" alt="验证码">
-            </el-form-item>
+            </el-form-item> -->
             <el-button type="primary" @click.native="login">登陆</el-button>
         </el-form>
     </div>
@@ -68,14 +68,25 @@
                                     this.getNew();
                                 } else {
                                     console.log(data.data)
-                                    localStorage.setItem('user', JSON.stringify(data.data));
+                                    let _user = data.data;
+                                    localStorage.setItem('user', JSON.stringify(_user));
                                     this.$message.success('登陆成功');
                                     setTimeout(() => {
                                         this.$router.push('/index')
                                     }, 1000);
+                                    if (!localStorage.getItem('mallInfo')) {
+                                        this.$http.post('mall/info', {
+                                            'mall': _user.mall
+                                        }).then((res) => {
+                                            if (res.data) {
+                                                localStorage.setItem('mallInfo', JSON.stringify(res.data));
+                                            }
+                                            console.log(res)
+                                        })
+                                    }
+
 
                                 }
-                                console.log(data)
                             }, (err) => {
                                 console.log(err)
                             })
@@ -111,5 +122,9 @@
     .captcha-input {
         width: 62%;
         float: left;
+    }
+
+    .el-button {
+        margin-top: 30px;
     }
 </style>

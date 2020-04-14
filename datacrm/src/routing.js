@@ -5,6 +5,8 @@ import Login from './page/login';
 import Index from './page/index';
 import AddReport from './page/addReport';
 import ReportList from './page/reportList';
+import ImpStore from './page/impStore';
+import Home from './page/home';
 
 const router = new VueRouter({
     mode: 'history',
@@ -19,13 +21,19 @@ const router = new VueRouter({
     {
         path: '/index',
         component: Index,
-        redirect: '/addReport',
+        redirect: '/home',
         children: [{
+            path: '/home',
+            component: Home
+        }, {
             path: '/addReport',
             component: AddReport
         }, {
             path: '/reportList',
             component: ReportList
+        }, {
+            path: '/impStore',
+            component: ImpStore
         }]
     }]
 })

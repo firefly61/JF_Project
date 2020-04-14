@@ -8,7 +8,7 @@ module.exports = app => {
         nickname:{type:String, require:true},
         sexy:{type:String, require:false},
         pwd:{type:String, require:true},
-        mall:{type:String, require: false},
+        mall:{type:Number, require: false},
         avatar:{type:String, require:false, default:'/user.png'}
     }, {timestamps:true})
     return mongoose.model('User', UserSchema)

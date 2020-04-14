@@ -9,12 +9,17 @@
             </el-table-column>
             <el-table-column prop="lastDay" label="去年同日" width="180">
             </el-table-column>
-            <el-table-column prop="lastWeek" label="环比上周">
+            <el-table-column prop="lastWeek" label="环比上周" width="180">
+            </el-table-column>
+            <el-table-column label="操作" fixed="right">
+                <template slot-scope="scope">
+                    <el-button @click="goDetail(scope.row)" type="text" size="small">详情</el-button>
+                </template>
             </el-table-column>
         </el-table>
 
-        <el-pagination layout="prev, pager, next" :total="50">
-        </el-pagination>
+        <!-- <el-pagination layout="prev, pager, next" :total="50">
+        </el-pagination> -->
     </div>
 </template>
 
@@ -22,31 +27,45 @@
     export default {
         data() {
             return {
-                saleTable: [{
-                    date: '2020-04-01',
-                    daySale: '52.9',
-                    lastYear: '33',
-                    lastDay: '29',
-                    lastWeek: '36'
-                }, {
-                    date: '2020-04-02',
-                    daySale: '52.9',
-                    lastYear: '33',
-                    lastDay: '29',
-                    lastWeek: '36'
-                }, {
-                    date: '2020-04-03',
-                    daySale: '52.9',
-                    lastYear: '33',
-                    lastDay: '29',
-                    lastWeek: '36'
-                }, {
-                    date: '2020-04-04',
-                    daySale: '52.9',
-                    lastYear: '33',
-                    lastDay: '29',
-                    lastWeek: '36'
-                }, ]
+                user: {},
+                saleList: [],
+                saleTable: []
+            }
+        },
+        created() {
+            this.user = JSON.parse(localStorage.getItem('user'));
+        },
+        async mounted() {
+            let obj = {
+                mall: this.user.mall
+            }
+            await this.$http.post('/sale/saleList', obj).then(data => {
+                this.saleList = data.data;
+                console.log(this.saleList)
+            })
+            this.saleList.forEach(ele => {
+                this.saleTable.push({
+                    date: this.formatDate(ele.today),
+                    daySale: ele.todaySale,
+                    lastYear: ele.lastYearWeek,
+                    lastDay: ele.lastYearDay,
+                    lastWeek: ele.lastWeek
+                })
+            });
+            console.log(this.saleTable)
+        },
+        methods: {
+            // 查看详情
+            goDetail() {
+
+            },
+            formatDate(str) {
+                str = new Date(str);
+                console.log(str)
+                let year = str.getFullYear(),
+                    month = str.getMonth() + 1 < 10 ? '0' + (str.getMonth() + 1) : str.getMonth() + 1 ,
+                    day = str.getDate()< 10 ? '0' + str.getDate() : str.getDate();
+                return year + '-' + month + '-' + day;
             }
         }
     }
