@@ -1,20 +1,26 @@
 <template>
   <div class="main fillcontain">
     <el-container>
-      <el-aside width="200px">
-        <el-menu :default-active="defaultActive" style="min-height: 100%;" router>
-          <el-menu-item index="home" style="min-height:60px;">
-            <img class="logo" src="../assets/_logo.png" alt="logo_首页">
+      <el-aside>
+        <el-button class="fold-btn" :class="{'close-fold': isCollapse}" @click="isCollapse=!isCollapse">
+          <i v-if="!isCollapse" class="el-icon-s-fold"></i>
+          <i v-if="isCollapse" class="el-icon-s-unfold"></i>
+        </el-button>
+        <el-menu :default-active="defaultActive" class="el-menu-jf" style="min-height: 100%;" background-color="#008ecc"
+          text-color="#fff" active-text-color="#f5af00" :collapse="isCollapse" router>
+          <el-menu-item class="logo-box" index="home" style="min-height:60px;">
+            <img class="logo" src="../assets/lo.png" alt="logo_首页">
+            <span slot="title">9 SQUARE</span>
           </el-menu-item>
-          <el-submenu index="1">
-            <template slot="title"><i class="el-icon-document"></i>数据管理</template>
+          <el-submenu index="addReport">
+            <template slot="title"><i class="el-icon-s-data"></i><span slot="title">数据管理</span></template>
             <el-menu-item index="addReport"><i class="el-icon-document-add"></i>添加数据</el-menu-item>
             <el-menu-item index="reportList"><i class="el-icon-data-analysis"></i>数据列表</el-menu-item>
             <el-menu-item index="impStore"><i class="el-icon-data-analysis"></i>重点商户</el-menu-item>
           </el-submenu>
-          <el-submenu index="2">
-            <template slot="title"><i class="el-icon-document"></i>个人中心</template>
-            <el-menu-item index="addReport"><i class="el-icon-document-add"></i>修改密码</el-menu-item>
+          <el-submenu index="3">
+            <template slot="title"><i class="el-icon-user-solid"></i><span slot="title">个人中心</span></template>
+            <el-menu-item index="changPwd"><i class="el-icon-document-add"></i>修改密码</el-menu-item>
           </el-submenu>
         </el-menu>
       </el-aside>
@@ -48,6 +54,7 @@
   export default {
     data() {
       return {
+        isCollapse: false,
         user: {},
         defaultActive: '1',
         logoutFlag: false
@@ -73,13 +80,24 @@
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
-  .logo {
-    width: 100%;
+  .logo-box {
+
+    .logo {
+      width: 26px;
+    }
+
+    span {
+      font-size: 1.35rem;
+      margin-left: 7px;
+      font-family: fantasy;
+      vertical-align: -webkit-baseline-middle;
+    }
   }
 
   .el-container {
     height: 100vh;
   }
+
 
   .el-header,
   .el-footer {
@@ -102,12 +120,46 @@
 
   }
 
+  .el-aside {
+    width: auto !important;
+  }
+
+  .fold-btn {
+    position: absolute;
+    left: 199px;
+    font-size: 25px;
+    color: #0077bc;
+    border-radius: 0 5px 5px 0;
+    top: 3px;
+    background: transparent;
+    border: none;
+    z-index: 999;
+  }
+
+  .fold-btn.close-fold {
+    left: 56px;
+  }
+
   .el-menu--horizontal .el-menu .el-menu-item {
     text-align: center;
+
     &:hover {
       background: #ecf5ff;
       color: #409EFF !important;
     }
+  }
+
+  .el-menu-jf {
+    i {
+      color: #fff;
+      font-size: 18px;
+      vertical-align: text-top;
+    }
+
+  }
+
+  .el-menu-jf:not(.el-menu--collapse) {
+    width: 200px;
   }
 
   // .el-menu--horizontal>.el-submenu .el-submenu__title:hover {
