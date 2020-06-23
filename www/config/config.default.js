@@ -40,6 +40,7 @@ module.exports = appInfo => {
     // }
     mongoose: {
       url: 'mongodb://127.0.0.1:27017/test'
+      // url: 'mongodb://192.168.202.20:27017/test'
     },
     jwt: {
       secret: 'sweety@liuying'
