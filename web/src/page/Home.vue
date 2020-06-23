@@ -1,139 +1,148 @@
 <template>
     <div class="home-page">
-        <van-cell title="选择日期" :value="date" @click="showCalendar = true" />
-        <van-calendar v-model="showCalendar" :min-date="minDate" :max-date="maxDate" :default-date="defaultDate"
-            @confirm="onConfirm" />
-        <van-cell title="选择项目" :value="mall.name" @click="showMall = true" />
-        <van-action-sheet v-model="showMall" :actions="actions" @select="onSelect" />
+        <van-sticky>
+            <van-cell :title="date" @click="showDateAction=true" />
+            <van-popup v-model="showDateAction" position="bottom">
+                <van-datetime-picker title="选择年月日" v-model="defaultDate" type="date" :min-date="minDate"
+                    :max-date="maxDate" @confirm="onConfirm" @cancel="showDateAction=false" />
+            </van-popup>
+
+            <van-cell :title="mall.name" @click="showMall = true" />
+            <van-action-sheet v-model="showMall" :actions="actions" @select="onSelect" />
+        </van-sticky>
 
         <van-loading v-if="loadingFlag" color="#1989fa" />
-        <div v-if="resFlag" class="add-report">
-            <h2>{{f_date}} ({{getWeek}})
-                <tr />
-                <span class="c-red">{{mall.name}}</span> 销售报告
-            </h2>
-            <table>
-                <tr>
-                    <td class="c-red">当日总销售额</td>
-                    <td>
-                        {{todaySale}} 万元
-                    </td>
-                    <td>时间进度</td>
-                    <td>{{getTProgress}}</td>
-                </tr>
-                <tr>
-                    <td class="c-red">当日客流</td>
-                    <td>
-                        {{todayCustomer}}人次
-                    </td>
-                    <td v-if="mall.code==9002" class="c-red">文轩客流</td>
-                    <td v-if="mall.code==9002">
-                        {{todayCustomer}}人次
-                    </td>
-                </tr>
-                <tr>
-                    <td class="c-red">本月销售目标<i v-if="mall.code==9001">含天虹</i>{{monthTarget}}万元</td>
-                    <td>
-                        {{monthTarget}}万元
-                    </td>
-                    <td>
-                        完成
-                    </td>
-                    <td>
-                        {{((monthSale/monthTarget) * 100).toFixed(2)}}%
-                    </td>
-                </tr>
-                <tr v-if="mall.code==9001">
-                    <td class="c-red">本月销售目标不含天虹{{monthTargetNoTH}}万元</td>
-                    <td>
-                        {{monthTargetNoTH}}万元
-                    </td>
-                    <td>
-                        完成
-                    </td>
-                    <td>
-                        {{((monthSaleNoTH/monthTargetNoTH) * 100).toFixed(2)}}%
-                    </td>
-                </tr>
-                <tr>
-                    <td>去年同期 <span>{{getWeek}}</span><span>(12月31日)</span></td>
-                    <td>{{lastYearWeek}}万元</td>
-                    <td>同比</td>
-                    <td>{{((todaySale/lastYearWeek - 1) * 100).toFixed(2)}}%</td>
-                </tr>
-                <tr>
-                    <td>去年同日 <span>{{getLastDay}}</span></td>
-                    <td> {{lastYearDay}}万元</td>
-                    <td>同比</td>
-                    <td>{{((todaySale/lastYearDay -1)*100).toFixed(2)}}%</td>
-                </tr>
-                <tr>
-                    <td>环比上周 <span>{{getWeek}}</span><span>{{getLastWeekDate}}</span></td>
-                    <td>{{lastWeek}}万元</td>
-                    <td>环比</td>
-                    <td>{{((todaySale/lastWeek -1)*100).toFixed(2)}}%</td>
-                </tr>
-            </table>
-            <h3>当日楼层销售</h3>
-            <!-- <table>
+        <v-touch v-on:swipeleft="onSwipeLeft" v-on:swiperight="onSwipeRight" v-on:tap="onTap">
+            <div class="add-report">
+                <!--v-if="resFlag" -->
+                <h2>
+                    <span class="c-red">{{mall.name}}</span> {{f_date}} ({{getWeek}})
+                </h2>
+                <table>
+                    <tr>
+                        <td class="c-red">当日总销售额</td>
+                        <td>
+                            {{todaySale}} 万元
+                        </td>
+                        <td>时间进度</td>
+                        <td>{{getTProgress}}</td>
+                    </tr>
+                    <tr>
+                        <td class="c-red">当日客流</td>
+                        <td>
+                            {{todayCustomer}}人次
+                        </td>
+                        <td v-if="mall.code==9002" class="c-red">文轩客流</td>
+                        <td v-if="mall.code==9002">
+                            {{todayCustomer}}人次
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="c-red">本月销售目标<i v-if="mall.code==9001">含天虹</i>{{monthTarget}}万元</td>
+                        <td>
+                            {{monthTarget}}万元
+                        </td>
+                        <td>
+                            完成
+                        </td>
+                        <td>
+                            {{((monthSale/monthTarget) * 100).toFixed(2)}}%
+                        </td>
+                    </tr>
+                    <tr v-if="mall.code==9001">
+                        <td class="c-red">本月销售目标不含天虹{{monthTargetNoTH}}万元</td>
+                        <td>
+                            {{monthTargetNoTH}}万元
+                        </td>
+                        <td>
+                            完成
+                        </td>
+                        <td>
+                            {{((monthSaleNoTH/monthTargetNoTH) * 100).toFixed(2)}}%
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>去年同期 <span>{{getWeek}}</span><span>(12月31日)</span></td>
+                        <td>{{lastYearWeek}}万元</td>
+                        <td>同比</td>
+                        <td>{{((todaySale/lastYearWeek - 1) * 100).toFixed(2)}}%</td>
+                    </tr>
+                    <tr>
+                        <td>去年同日 <span>{{getLastDay}}</span></td>
+                        <td> {{lastYearDay}}万元</td>
+                        <td>同比</td>
+                        <td>{{((todaySale/lastYearDay -1)*100).toFixed(2)}}%</td>
+                    </tr>
+                    <tr>
+                        <td>环比上周 <span>{{getWeek}}</span><span>{{getLastWeekDate}}</span></td>
+                        <td>{{lastWeek}}万元</td>
+                        <td>环比</td>
+                        <td>{{((todaySale/lastWeek -1)*100).toFixed(2)}}%</td>
+                    </tr>
+                </table>
+                <h3>当日楼层销售</h3>
+                <!-- <table>
                 <tr v-for="item in floors" :key="item.name">
                     <td>{{item.name}}层</td>
                     <td>{{item.value}}万元</td>
                 </tr>
             </table> -->
-            <floors-charts :floors="floors"></floors-charts>
-            <h3>环比上周 {{getLastWeekDate}} ({{getWeek}}) 业态明细</h3>
-            <table>
-                <thead>
-                    <th colspan="2">上周{{getWeek}} ({{getLastWeekDate}})</th>
-                    <th colspan="2">本周{{getWeek}} ({{getToday}})</th>
-                </thead>
-                <tbody>
-                    <tr v-if="mall.code==9002 && wxSale">
-                        <td>文轩书店</td>
+                <floors-charts :floors="floors"></floors-charts>
+                <h3>环比上周 {{getLastWeekDate}} ({{getWeek}}) 业态明细</h3>
+                <table>
+                    <thead>
+                        <th colspan="2">上周{{getWeek}} ({{getLastWeekDate}})</th>
+                        <th colspan="2">本周{{getWeek}} ({{getToday}})</th>
+                    </thead>
+                    <tbody>
+                        <tr v-if="mall.code==9002 && wxSale">
+                            <td>文轩书店</td>
+                            <td>
+                                {{wxSale.lastVal}}万元
+                            </td>
+                            <td>文轩书店</td>
+                            <td>
+                                {{wxSale.val}}万元
+                            </td>
+                            <td>环比</td>
+                            <td>{{((wxSale.val/wxSale.lastVal-1)*100).toFixed(2)}}%</td>
+                        </tr>
+                        <tr v-for="item in format" :key="item.label">
+                            <td>{{item.label}}</td>
+                            <td>
+                                {{item.lastVal}}万元
+                            </td>
+                            <td>零售</td>
+                            <td>
+                                {{item.val}}万元
+                            </td>
+                            <td>环比</td>
+                            <td v-if="item.val!=0 || item.lastVal!=0">{{((item.val/item.lastVal-1)*100).toFixed(2)}}%
+                            </td>
+                            <td v-else>0</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h3>重点商户销售明细</h3>
+                <table>
+                    <thead>
+                        <th></th>
+                        <th>店铺名</th>
+                        <th>销售额(万元)</th>
+                    </thead>
+                    <tr v-for="item in impStore" :key="item.id">
+                        <td>{{item.storeType}}</td>
                         <td>
-                            {{wxSale.lastVal}}万元
+                            {{item.storeName}}
                         </td>
-                        <td>文轩书店</td>
                         <td>
-                            {{wxSale.val}}万元
+                            {{item.saleVal}}万元
                         </td>
-                        <td>环比</td>
-                        <td>{{((wxSale.val/wxSale.lastVal-1)*100).toFixed(2)}}%</td>
                     </tr>
-                    <tr v-for="item in format" :key="item.label">
-                        <td>{{item.label}}</td>
-                        <td>
-                            {{item.lastVal}}万元
-                        </td>
-                        <td>零售</td>
-                        <td>
-                            {{item.val}}万元
-                        </td>
-                        <td>环比</td>
-                        <td v-if="item.val!=0 || item.lastVal!=0">{{((item.val/item.lastVal-1)*100).toFixed(2)}}%</td>
-                        <td v-else>0</td>
-                    </tr>
-                </tbody>
-            </table>
-            <h3>重点商户销售明细</h3>
-            <table>
-                <thead>
-                    <th></th>
-                    <th>店铺名</th>
-                    <th>销售额(万元)</th>
-                </thead>
-                <tr v-for="item in impStore" :key="item.id">
-                    <td>{{item.storeType}}</td>
-                    <td>
-                        {{item.storeName}}
-                    </td>
-                    <td>
-                        {{item.saleVal}}万元
-                    </td>
-                </tr>
-            </table>
-        </div>
+                </table>
+
+            </div>
+        </v-touch>
     </div>
 </template>
 
@@ -142,10 +151,10 @@
     export default {
         data() {
             return {
+                showDateAction: false,
                 date: '',
                 f_date: '',
                 today: new Date(),
-                showCalendar: false,
                 showMall: false,
                 minDate: new Date(2020, 0, 1),
                 maxDate: new Date(2020, 11, 30),
@@ -192,13 +201,16 @@
                 impStore: [],
                 format: [],
                 floors: [],
-                wxSale: {}
+                wxSale: {},
+                // tempMall: [], //手势左滑动暂存数组
+                // tArr: [],
+                tempi: 0
             }
         },
         async mounted() {
             this.defaultDate = new Date(new Date().getTime() - 24 * 60 * 60 * 1000);
             this.date = this.formatDate(this.defaultDate);
-            this.getData();
+            this.getData(this.mall);
         },
         computed: {
             getToday() {
@@ -233,7 +245,7 @@
                 let arr = [1, 2, 3, 5, 7, 8, 10, 12];
                 let week = this.today.getMonth() + 1,
                     day = this.today.getDate();
-                let days = arr.indexOf(week)>0 ? 31 : 30;
+                let days = arr.indexOf(week) > 0 ? 31 : 30;
                 return (day / days * 100).toFixed(2) + '%';
             }
         },
@@ -246,21 +258,21 @@
                 }
             },
             async onConfirm(d) {
-                this.showCalendar = false;
+                this.showDateAction = false;
                 this.date = this.formatDate(d);
                 this.f_date = this.formatDate(d, 'char');
                 this.today = d;
-                await this.getData();
+                await this.getData(this.mall);
             },
             async onSelect(item) {
                 this.showMall = false;
-                this.mall = item;
+                // this.mall = item;
                 this.loadingFlag = true;
-                await this.getData();
+                await this.getData(item);
             },
-            async getData() {
+            async getData(mall) {
                 let obj = {
-                    mall: this.mall.code,
+                    mall: mall.code,
                     date: new Date(this.date).getTime()
                 }
                 await this.$http.post('sale/getSale', obj).then(
@@ -308,6 +320,52 @@
                         });
                     }
                 )
+            },
+            async onSwipeLeft() {
+                if (this.tempi < this.actions.length) {
+                    this.mall = this.actions[this.tempi];
+                    await this.getData(this.mall);
+                    ++this.tempi;
+                } else {
+                    this.tempi = 0;
+                }
+                console.log(this.tempi, this.actions[this.tempi].code)
+
+                // 随机获取下一个项目，一轮巡后清空暂存数组
+                // let self = this;
+                // function getNext() {
+                //     let i = Math.floor(Math.random() * arr.length);
+                //     console.log(i)
+                //     let f = self.tArr.includes(arr[i].code); 
+                //     //self.tempMall.includes(arr[i]);
+                //     console.log(f)
+                //     console.log(self.tempMall)
+                //     if (f) {
+                //         if (self.tArr.length === arr.length) {
+                //             self.tempMall = self.tempMall[self.tempMall.length - 1];
+                //         } else {
+                //             getNext();
+                //         }
+                //     } else {
+                //         self.tempMall.push(arr[i])
+                //         self.tArr.push(arr[i].code)
+                //         self.getData(arr[i])
+                //     }
+                // }
+                // getNext();
+            },
+            async onSwipeRight() {
+                if (this.tempi - 1 < 0) {
+                    this.tempi = this.actions.length;
+                }
+                console.log(this.tempi-1)
+                this.mall = this.actions[this.tempi - 1]
+                this.getData(this.mall);
+                --this.tempi;
+                console.log(this.tempi - 1, this.actions[this.tempi].code)
+            },
+            async onTap() {
+                console.log('tap')
             }
         },
         components: {
@@ -318,6 +376,11 @@
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style lang='scss'>
+    .home-page {
+        width: 100vw;
+        height: 100vh;
+    }
+
     .van-loading {
         padding: 60px;
     }

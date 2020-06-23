@@ -24,6 +24,8 @@
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
     .charts-page{
+        width: 100vw;
+        height: 100vh;
         padding-bottom: 13vh;
         background: #0e2147;
     }
