@@ -42,3 +42,12 @@ a,a:hover{color:#333;}
 .fwb {
     font-weight: bold;
 }
+
+.clearfix:after {
+    visibility: hidden;
+    display: block;
+    font-size: 0;
+    content: " ";
+    clear: both;
+    height: 0;
+}

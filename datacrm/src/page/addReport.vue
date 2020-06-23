@@ -38,13 +38,15 @@
             <tr>
                 <td class="t-r c-r">本月销售目标<i v-if="user.mall==9001">含天虹</i>(单位：万元)</td>
                 <td>
-                    <el-input v-model="monthTarget" placeholder="万元" type="number"></el-input>
+                    <el-input v-model="monthTarget" 
+                    placeholder="万元" type="number" :disabled="targetDisabled"></el-input>
                 </td>
                 <td class="t-r c-r">
                     本月销售额<i v-if="user.mall==9001">含天虹</i>(单位：万元)
                 </td>
                 <td>
-                    <el-input placeholder="万元" type="number" v-model="monthSale"></el-input>
+                    <el-input placeholder="万元" type="number" 
+                    v-model="monthSale" :disabled="targetDisabled"></el-input>
                 </td>
             </tr>
             <tr>
@@ -148,8 +150,9 @@
                 <th>店铺属性</th>
                 <th>店铺名</th>
                 <th>销售额(万元)</th>
+                <th>操作</th>
             </thead>
-            <tr v-for="item in impStore" :key="item.id">
+            <tr v-for="(item, index) in impStore" :key="item.id">
                 <td>
                     <el-select v-model="item.storeType" placeholder="请选择">
                         <el-option v-for="item in storeTypes" :key="item.value" :label="item.label" :value="item.value">
@@ -161,6 +164,9 @@
                 </td>
                 <td>
                     <el-input placeholder="万元" type="number" v-model="item.saleVal"></el-input>
+                </td>
+                <td>
+                    <a class="del-btn" @click="deleteStore(index)">删除</a>
                 </td>
             </tr>
             <tr @click="addShop">
@@ -188,6 +194,7 @@
                 todayCustomer: '', // 今日客流
                 todayWXCustomer: '', // 成都文轩客流
                 monthTarget: '', // 本月销售目标
+                targetDisabled: false,  // 不可编辑flag
                 monthSale: '', // 本月销售额
                 monthTargetNoTH: '', // 赣州本月销售目标不含天虹
                 monthSaleNoTH: '', // 赣州本月销售额不含天虹
@@ -262,9 +269,24 @@
             }
         },
         mounted() {
-            let _user = JSON.parse(localStorage.getItem('user'));
-            let mallInfo = JSON.parse(localStorage.getItem('mallInfo'));
-            if (_user) {
+            let _user = JSON.parse(localStorage.getItem('user')); // 获取管理员信息
+            let mallInfo = JSON.parse(localStorage.getItem('mallInfo')); // 获取项目信息：店铺、楼层
+            let _month = new Date().getMonth() + 1;
+            this.$http.post('sale/target', {
+                    month: _month,
+                    code: mallInfo.code
+                }).then((res) => {
+                if(res.data) {
+                    this.monthTarget = res.data.monthTarget;
+                    this.targetDisabled = true;
+                    res.data.dailySales.forEach(v => {
+                        this.monthSale += v.sale;
+                    })
+                    console.log(this.monthSale)
+                }
+                
+            })
+            if (_user) { // 获取管理员所在项目
                 this.user = _user;
                 this.malls.forEach(element => {
                     if (element.code == _user.mall) {
@@ -287,7 +309,7 @@
                     })
                 })
                 // 处理楼层
-                for(let i = 1; i<mallInfo.floorNum; ++i) {
+                for (let i = 1; i < mallInfo.floorNum; ++i) {
                     this.floors.push({
                         name: 'L' + i
                     })
@@ -307,7 +329,6 @@
                             })
                         })
                     }
-                    console.log(res)
                 })
             }
         },
@@ -349,6 +370,9 @@
             }
         },
         methods: {
+            /**
+             * 提交数据
+             */
             async commit() {
                 if (this.todaySale) {
                     let obj = {
@@ -374,6 +398,7 @@
                     this.$http.post('sale/create', obj).then(() => {
                         this.$message.success("数据提交成功");
                         this.$router.push('reportList');
+                        this.init()
                     }, (err) => {
                         this.$message.error(err);
                     })
@@ -382,6 +407,9 @@
                 }
 
             },
+            /**
+             * 添加店铺
+             */
             async addShop() {
                 await this.impStore.push({
                     id: this.impStore.length,
@@ -391,6 +419,9 @@
                 })
                 console.log(this.impStore)
             },
+            /**
+             * 添加楼层
+             */
             async addFloor() {
                 let _i = this.floors.length;
                 let _name = 'F' + _i;
@@ -399,6 +430,9 @@
                     value: ''
                 })
             },
+            /**
+             * 日历选择，请求选中日期数据，若已提交过数据则用返回数据填充
+             */
             async dateBlur() {
                 let obj = {
                     date: this.today.getTime(),
@@ -420,56 +454,70 @@
                         this.floors = res.floors; // 楼层
                         this.format = res.format; // 业态
                         this.impStore = res.impStore;
+                    } else {
+                        this.init()
                     }
-                    // else {
-                    //     this.todaySale = '';
-                    //     this.todayCustomer = '';
-                    //     this.monthTarget = ''; // 本月销售目标
-                    //     this.monthSale = ''; // 本月销售额
-                    //     this.monthTargetNoTH = ''; // 赣州本月销售目标不含天虹
-                    //     this.monthSaleNoTH = ''; // 赣州本月销售额不含天虹
-                    //     this.lastYearWeek = '';
-                    //     this.lastYearDay = '';
-                    //     this.lastWeek = '';
-                    //     this.floors = [{
-                    //         name: 'B1',
-                    //         value: ''
-                    //     }, {
-                    //         name: 'F1',
-                    //         value: ''
-                    //     }, {
-                    //         name: 'F2',
-                    //         value: ''
-                    //     }, {
-                    //         name: 'F3',
-                    //         value: ''
-                    //     }]; // 楼层
-                    //     this.format = [{
-                    //         label: '零售',
-                    //         lastVal: '',
-                    //         val: '',
-                    //     }, {
-                    //         label: '餐饮',
-                    //         lastVal: '',
-                    //         val: ''
-                    //     }, {
-                    //         label: '亲子',
-                    //         lastVal: '',
-                    //         val: ''
-                    //     }, {
-                    //         label: '配套',
-                    //         lastVal: '',
-                    //         val: ''
-                    //     }]; // 业态
-                    //     this.impStore = [{
-                    //         id: 0,
-                    //         storeType: '主力店',
-                    //         storeName: '',
-                    //         saleVal: ''
-                    //     }];
-                    // }
-
                 })
+            },
+            /**
+             * 删除无销售数据店铺
+             */
+            async deleteStore(i) {
+                await this.impStore.splice(i, 1);
+            },
+            /**
+             * 初始化数据
+             */
+            init() {
+                let mallInfo = JSON.parse(localStorage.getItem('mallInfo'));
+
+                this.todaySale = '';
+                this.todayCustomer = '';
+                this.monthTarget = ''; // 本月销售目标
+                this.monthSale = ''; // 本月销售额
+                this.monthTargetNoTH = ''; // 赣州本月销售目标不含天虹
+                this.monthSaleNoTH = ''; // 赣州本月销售额不含天虹
+                this.lastYearWeek = '';
+                this.lastYearDay = '';
+                this.lastWeek = '';
+                this.format = [{
+                    label: '零售',
+                    lastVal: '',
+                    val: '',
+                }, {
+                    label: '餐饮',
+                    lastVal: '',
+                    val: ''
+                }, {
+                    label: '亲子',
+                    lastVal: '',
+                    val: ''
+                }, {
+                    label: '配套',
+                    lastVal: '',
+                    val: ''
+                }]; // 业态
+
+                // 处理店铺
+                this.impStore = [];
+                mallInfo.impStore.forEach((v, index) => {
+                    this.impStore.push({
+                        id: index,
+                        storeType: v.storeType,
+                        storeName: v.storeName,
+                        saleVal: ''
+                    })
+                })
+                // 处理楼层
+                this.floors = [{
+                    name: 'B1',
+                    value: ''
+                }];
+                for (let i = 1; i < mallInfo.floorNum; ++i) {
+                    this.floors.push({
+                        name: 'L' + i
+                    })
+                }
             }
         }
     }
@@ -491,7 +539,7 @@
 
     th {
         text-align: center;
-        padding: 7px;
+        padding: 7px 24px;
         font-weight: bold;
     }
 
@@ -504,6 +552,16 @@
     td {
         padding-bottom: 10px;
         padding-left: 10px;
+
+        .del-btn {
+            font-size: 12px;
+            padding-left: 15px;
+            color: #409EFF;
+
+            &:hover {
+                color: blue;
+            }
+        }
     }
 
     .el-col {

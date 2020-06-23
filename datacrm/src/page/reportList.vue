@@ -45,7 +45,7 @@
             })
             this.saleList.forEach(ele => {
                 this.saleTable.push({
-                    date: this.formatDate(ele.today),
+                    date: this.formatDate(ele.dateStamp),
                     daySale: ele.todaySale,
                     lastYear: ele.lastYearWeek,
                     lastDay: ele.lastYearDay,

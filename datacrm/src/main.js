@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import App from './App.vue';
 import router from './routing';
+import echarts from 'echarts';
 
 import './service/axios'
 
@@ -13,7 +14,7 @@ import './styles/fun.scss'
 
 
 Vue.config.productionTip = false;
-
+Vue.prototype.$echarts = echarts;
 
 new Vue({
   router,
